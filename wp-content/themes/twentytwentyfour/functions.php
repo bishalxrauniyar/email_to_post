@@ -208,5 +208,3 @@ if (! function_exists('twentytwentyfour_pattern_categories')) :
 endif;
 
 add_action('init', 'twentytwentyfour_pattern_categories');
-
-// function etp_fetch_emails() to fetch the emails from the IMAP server and create WordPress posts.
