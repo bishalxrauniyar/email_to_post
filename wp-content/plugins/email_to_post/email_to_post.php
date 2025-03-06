@@ -33,10 +33,23 @@ function etp_fetch_emails_callback()
     echo '<form method="post" action="">
     <input type="submit" name="fetch_emails" value="Fetch Emails" class="button button-primary">
     </form>';
+    echo '<br>';
+    echo '<form method="post" action="">
+    <input type="text" name="host_name" value="Add Host Name" >
+    <input type="email" name="email" value="Add Emails" >
+    <input type="password" name="password" value="Password" >
+    <input type="submit" name="add_email" value="Add new email" class="button button-primary">
+    </form>';
     // if the button is clicked
+    if (isset($_POST['add_email'])) {
+        $new_hostname = $_POST['host_name']; //email hostname with port number and email protocol (IMAP) ssl
+        $new_username = $_POST['email'];
+        $new_password = $_POST['password'];
+        echo '<p>Email added successfully.</p>';
+    }
     if (isset($_POST['fetch_emails']))
         etp_fetch_emails();
-    echo '<p>Emails fetched and posts created successfully.</p>';
+    // echo '<p>Emails fetched and posts created successfully.</p>';
     // creating a table to display the fetched emails
     echo '<table class="wp-list-table widefat fixed striped">';
     echo '<tr><th>From</th><th>Subject</th><th>Date</th><th>Message</th></tr>';
@@ -55,27 +68,48 @@ function etp_fetch_emails_callback()
 
 
 function etp_fetch_emails()
+//$new_hostname, $new_username, $new_password
 {
 
-    $hostname = '{wplocatepress.com:993/imap/ssl}INBOX';
+    $hostname = '{wplocatepress.com:993/imap/ssl}INBOX'; //email hostname with port number and email protocol (IMAP) ssl
     $username = 'pipetest@wplocatepress.com';
-    $password = '*1j?4(+l2#:x';
+    $password = 'k342+11$c1_';
+
+    // //dynamic email, password and hostname
+    // $hostname = $new_hostname; //email hostname with port number and email protocol (IMAP) ssl
+    // $username = $new_username;
+    // $password = $new_password;
 
 
     //CONNECT TO EMAIL
     $email = imap_open($hostname, $username, $password) or die('Cannot connect to email: ' . imap_last_error());
     //GET EMAILS
-    $emails = imap_search($email, 'UNSEEN '); //for unseen emails
+    $emails = imap_search($email, 'UNSEEN'); //for unseen emails
+    var_dump($emails);
 
-    //LOOP THROUGH EMAILS
-    if ($email) {
-        foreach ($email as $emails) {
-            $headerInfo = imap_headerinfo($email, $emails); //get header info of the email
-            $from = $headerInfo->fromaddress; //get the email address of the sender
-            $subject = $headerInfo->subject; //get the subject of the email
-            $date = $headerInfo->date; //get the date of the email
-            $message = imap_fetchbody($email, $emails, 1.1); //The section 1.1 typically refers to the first part of a multipart message, often the plain text version of the email.
-            //CREATE POST
+
+
+
+    if ($emails) {
+        foreach ($emails as $email_number) {
+            $headerInfo = imap_headerinfo($email, $email_number);
+            $from = $headerInfo->fromaddress ?? 'Unknown Sender';
+            $subject = $headerInfo->subject ?? 'No Subject';
+            $date = date("Y-m-d H:i:s", strtotime($headerInfo->date ?? 'now'));
+
+            // Get email message
+            $message = imap_fetchbody($email, $email_number, 1);
+            if (empty($message)) {
+                $message = imap_fetchbody($email, $email_number, 1.1);
+            }
+
+            // Debugging output
+            echo "<h3>Email #$email_number</h3>";
+            echo "<strong>From:</strong> $from <br>";
+            echo "<strong>Subject:</strong> $subject <br>";
+            echo "<strong>Date:</strong> $date <br>";
+            echo "<strong>Message:</strong> <pre>" . htmlspecialchars($message) . "</pre><br><br>";
+
             $post = array(
                 'post_title' => $subject,
                 'post_content' => $message,
@@ -87,8 +121,7 @@ function etp_fetch_emails()
             $post_id = wp_insert_post($post);
             //ADD POST META
             add_post_meta($post_id, 'email_from', $from);
-            //MARK EMAIL AS READ
-            imap_setflag_full($email, $emails, "\Seen"); //Mark the email as read
+            imap_setflag_full($email, $email_number, "\\Seen");
         }
     }
 }
