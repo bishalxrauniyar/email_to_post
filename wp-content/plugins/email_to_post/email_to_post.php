@@ -58,9 +58,9 @@ function etp_fetch_emails_callback()
 
 function etp_fetch_emails()
 {
-    $hostname = '{wplocatepress.com:993/imap/ssl}INBOX';
-    $username = 'pipetest@wplocatepress.com'; // Use environment variable
-    $password = 'k342+11$c1_';
+    $hostname = '{wplocatepress.com:993/imap/ssl}INBOX'; // email server
+    $username = 'pipetest@wplocatepress.com'; // email
+    $password = 'k342+11$c1_'; // password
 
     // CONNECT TO EMAIL
     $email = imap_open($hostname, $username, $password) or die('Cannot connect to email: ' . imap_last_error());
@@ -89,6 +89,7 @@ function etp_fetch_emails()
             $from = $headerInfo->fromaddress ?? 'Unknown Sender';
             $subject = $headerInfo->subject ?? 'No Subject';
             $date = date("Y-m-d H:i:s", strtotime($headerInfo->date ?? 'now'));
+            $in_reply_to = $headerInfo->in_reply_to ?? '';
 
             if ($date <= $last_post_date) {
                 continue; // Skip emails older than the last post
@@ -98,6 +99,33 @@ function etp_fetch_emails()
             } elseif (empty($message)) {
                 $message = imap_fetchbody($email, $email_number, 1.1);
             }
+
+            // if ($in_reply_to) {
+            //     $args = array(
+            //         'post_type' => 'post',
+            //         'meta_query' => array(
+            //             array(
+            //                 'key' => 'email_from',
+            //                 'value' => $from,
+            //             ),
+            //         ),
+            //     );
+            //     $query = new WP_Query($args);
+            //     if ($query->have_posts()) {
+            //         $query->the_post();
+            //         $post_id = $query->posts[0]->ID;
+            //         $post_content = get_post_field('post_content', $post_id);
+            //         $post_content .= '<hr>' . $message;
+            //         wp_update_post(array(
+            //             'ID' => $post_id,
+            //             'post_content' => $post_content,
+            //         ));
+            //         // var_dump($post_id);
+            //         var_dump($post_content);
+            //     }
+            //     wp_reset_postdata();
+            // }
+            // var_dump($in_reply_to);
 
             // CREATE POST  
             $post_id = wp_insert_post(array(
