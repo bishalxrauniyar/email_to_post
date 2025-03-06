@@ -76,7 +76,7 @@ function etp_fetch_emails()
         'posts_per_page' => 1,
     );
     $query = new WP_Query($args);
-    $last_post_date = '2025-01-01 00:00:00';
+    $last_post_date = '2000-01-01 00:00:00';
 
     if ($query->have_posts()) {
         $last_post_date = get_the_date('Y-m-d H:i:s', $query->posts[0]->ID);
@@ -93,23 +93,9 @@ function etp_fetch_emails()
             if ($date <= $last_post_date) {
                 continue; // Skip emails older than the last post
             }
-
-            // Get email message (handling multipart emails)
-            $structure = imap_fetchstructure($email, $email_number);
-            $message = '';
-
-            if (!empty($structure->parts)) {
-                foreach ($structure->parts as $part_index => $part) {
-                    if ($part->subtype == 'PLAIN') {
-                        $message = imap_fetchbody($email, $email_number, $part_index + 1);
-                        break;
-                    }
-                }
-            } else {
+            if (empty($messsage)) {
                 $message = imap_fetchbody($email, $email_number, 1);
-            }
-
-            if (empty($message)) {
+            } elseif (empty($message)) {
                 $message = imap_fetchbody($email, $email_number, 1.1);
             }
 
@@ -125,9 +111,6 @@ function etp_fetch_emails()
 
             if ($post_id) {
                 add_post_meta($post_id, 'email_from', $from);
-                echo '<p>Email fetched and post created successfully.</p>';
-            } else {
-                echo '<p>Error creating post.</p>';
             }
         }
     }
