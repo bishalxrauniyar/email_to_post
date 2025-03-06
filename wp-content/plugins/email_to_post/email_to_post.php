@@ -100,32 +100,32 @@ function etp_fetch_emails()
                 $message = imap_fetchbody($email, $email_number, 1.1);
             }
 
-            // if ($in_reply_to) {
-            //     $args = array(
-            //         'post_type' => 'post',
-            //         'meta_query' => array(
-            //             array(
-            //                 'key' => 'email_from',
-            //                 'value' => $from,
-            //             ),
-            //         ),
-            //     );
-            //     $query = new WP_Query($args);
-            //     if ($query->have_posts()) {
-            //         $query->the_post();
-            //         $post_id = $query->posts[0]->ID;
-            //         $post_content = get_post_field('post_content', $post_id);
-            //         $post_content .= '<hr>' . $message;
-            //         wp_update_post(array(
-            //             'ID' => $post_id,
-            //             'post_content' => $post_content,
-            //         ));
-            //         // var_dump($post_id);
-            //         var_dump($post_content);
-            //     }
-            //     wp_reset_postdata();
-            // }
-            // var_dump($in_reply_to);
+            if ($in_reply_to) {
+                $args = array(
+                    'post_type' => 'post',
+                    'meta_query' => array(
+                        array(
+                            'key' => 'email_from',
+                            'value' => $from,
+                        ),
+                    ),
+                );
+                $query = new WP_Query($args);
+                if ($query->have_posts()) {
+                    $query->the_post();
+                    $post_id = $query->posts[0]->ID;
+                    $post_content = get_post_field('post_content', $post_id);
+                    $post_content .= '<hr>' . $message;
+                    wp_update_post(array(
+                        'ID' => $post_id,
+                        'post_content' => $post_content,
+                    ));
+                    // var_dump($post_id);
+                    var_dump($post_content);
+                }
+                wp_reset_postdata();
+            }
+            var_dump($in_reply_to);
 
             // CREATE POST  
             $post_id = wp_insert_post(array(
