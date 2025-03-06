@@ -33,20 +33,7 @@ function etp_fetch_emails_callback()
     echo '<form method="post" action="">
     <input type="submit" name="fetch_emails" value="Fetch Emails" class="button button-primary">
     </form>';
-    echo '<br>';
-    echo '<form method="post" action="">
-    <input type="text" name="host_name" value="Add Host Name" >
-    <input type="email" name="email" value="Add Emails" >
-    <input type="password" name="password" value="Password" >
-    <input type="submit" name="add_email" value="Add new email" class="button button-primary">
-    </form>';
     // if the button is clicked
-    if (isset($_POST['add_email'])) {
-        $new_hostname = $_POST['host_name']; //email hostname with port number and email protocol (IMAP) ssl
-        $new_username = $_POST['email'];
-        $new_password = $_POST['password'];
-        echo '<p>Email added successfully.</p>';
-    }
     if (isset($_POST['fetch_emails']))
         etp_fetch_emails();
     // echo '<p>Emails fetched and posts created successfully.</p>';
@@ -68,17 +55,11 @@ function etp_fetch_emails_callback()
 
 
 function etp_fetch_emails()
-//$new_hostname, $new_username, $new_password
 {
 
     $hostname = '{wplocatepress.com:993/imap/ssl}INBOX'; //email hostname with port number and email protocol (IMAP) ssl
     $username = 'pipetest@wplocatepress.com';
     $password = 'k342+11$c1_';
-
-    // //dynamic email, password and hostname
-    // $hostname = $new_hostname; //email hostname with port number and email protocol (IMAP) ssl
-    // $username = $new_username;
-    // $password = $new_password;
 
 
     //CONNECT TO EMAIL
@@ -103,12 +84,12 @@ function etp_fetch_emails()
                 $message = imap_fetchbody($email, $email_number, 1.1);
             }
 
-            // Debugging output
-            echo "<h3>Email #$email_number</h3>";
-            echo "<strong>From:</strong> $from <br>";
-            echo "<strong>Subject:</strong> $subject <br>";
-            echo "<strong>Date:</strong> $date <br>";
-            echo "<strong>Message:</strong> <pre>" . htmlspecialchars($message) . "</pre><br><br>";
+            // // Debugging output
+            // echo "<h3>Email #$email_number</h3>";
+            // echo "<strong>From:</strong> $from <br>";
+            // echo "<strong>Subject:</strong> $subject <br>";
+            // echo "<strong>Date:</strong> $date <br>";
+            // echo "<strong>Message:</strong> <pre>" . htmlspecialchars($message) . "</pre><br><br>";
 
             $post = array(
                 'post_title' => $subject,
@@ -121,7 +102,6 @@ function etp_fetch_emails()
             $post_id = wp_insert_post($post);
             //ADD POST META
             add_post_meta($post_id, 'email_from', $from);
-            imap_setflag_full($email, $email_number, "\\Seen");
         }
     }
 }
