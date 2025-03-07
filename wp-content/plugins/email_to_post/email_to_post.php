@@ -102,9 +102,16 @@ function etp_fetch_emails()
 
             // Fetch message body
             $message = imap_fetchbody($email, $email_number, 1);
+
+            // $testM = imap_fetchtext($email, $email_number);
+            // var_dump($testM);
+
+
             if (empty($message)) {
                 $message = imap_fetchbody($email, $email_number, 1.1);
             }
+
+
 
             // If it's a reply, find the parent post and add a comment
             if (!empty($in_reply_to)) {
@@ -118,6 +125,8 @@ function etp_fetch_emails()
 
                 if (!empty($parent_query->posts)) {
                     $parent_post_id = $parent_query->posts[0];
+
+                    // Clean up email message by removing quoted text
 
                     // Insert comment
                     if (!empty($message)) {
