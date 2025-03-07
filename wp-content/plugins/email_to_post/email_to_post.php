@@ -71,16 +71,19 @@ function etp_fetch_emails()
     // Fetch last post date
     $args = array(
         'post_type'      => 'post',
-        'orderby'        => 'ID',
+        'orderby'        => 'post_date',
         'order'          => 'DESC',
         'posts_per_page' => 1,
+        'fields'         => 'ids',
     );
+
     $query = new WP_Query($args);
     $last_post_date = '2000-01-01 00:00:00';
 
-    if ($query->have_posts()) {
-        $last_post_date = get_the_date('Y-m-d H:i:s', $query->posts[0]->ID);
+    if (!empty($query->posts)) {
+        $last_post_date = get_the_date('Y-m-d H:i:s', $query->posts[0]);
     }
+
     wp_reset_postdata();
 
     if ($emails) {
@@ -89,45 +92,49 @@ function etp_fetch_emails()
             $from = $headerInfo->fromaddress ?? 'Unknown Sender';
             $subject = $headerInfo->subject ?? 'No Subject';
             $date = date("Y-m-d H:i:s", strtotime($headerInfo->date ?? 'now'));
-            $in_reply_to = $headerInfo->in_reply_to ?? '';
+            $in_reply_to = $headerInfo->in_reply_to ?? ''; // Get in-reply-to (original email's Message-ID)
+            $message_id = $headerInfo->message_id ?? ''; // Current email's Message-ID
 
+            // Skip emails older than the last post
             if ($date <= $last_post_date) {
-                continue; // Skip emails older than the last post
+                continue;
             }
-            if (empty($messsage)) {
-                $message = imap_fetchbody($email, $email_number, 1);
-            } elseif (empty($message)) {
+
+            // Fetch message body
+            $message = imap_fetchbody($email, $email_number, 1);
+            if (empty($message)) {
                 $message = imap_fetchbody($email, $email_number, 1.1);
             }
 
-            if ($in_reply_to) {
-                $args = array(
-                    'post_type' => 'post',
-                    'meta_query' => array(
-                        array(
-                            'key' => 'email_from',
-                            'value' => $from,
-                        ),
-                    ),
-                );
-                $query = new WP_Query($args);
-                if ($query->have_posts()) {
-                    $query->the_post();
-                    $post_id = $query->posts[0]->ID;
-                    $post_content = get_post_field('post_content', $post_id);
-                    $post_content .= '<hr>' . $message;
-                    wp_update_post(array(
-                        'ID' => $post_id,
-                        'post_content' => $post_content,
-                    ));
-                    // var_dump($post_id);
-                    var_dump($post_content);
-                }
-                wp_reset_postdata();
-            }
-            var_dump($in_reply_to);
+            // If it's a reply, find the parent post and add a comment
+            if (!empty($in_reply_to)) {
+                $parent_query = new WP_Query(array(
+                    'meta_key'   => 'email_message_id',
+                    'meta_value' => $in_reply_to,
+                    'post_type'  => 'post',
+                    'posts_per_page' => 1,
+                    'fields'     => 'ids',
+                ));
 
-            // CREATE POST  
+                if (!empty($parent_query->posts)) {
+                    $parent_post_id = $parent_query->posts[0];
+
+                    // Insert comment
+                    if (!empty($message)) {
+                        wp_insert_comment(array(
+                            'comment_post_ID' => $parent_post_id,
+                            'comment_author'  => $from,
+                            'comment_content' => $message,
+                            'comment_date'    => $date,
+                            'comment_approved' => 1,
+                        ));
+                    }
+
+                    continue; // Skip post creation since it's a reply
+                }
+            }
+
+            // Create new post if it's not a reply
             $post_id = wp_insert_post(array(
                 'post_title'   => $subject,
                 'post_content' => $message,
@@ -136,6 +143,11 @@ function etp_fetch_emails()
                 'post_author'  => 1,
                 'post_type'    => 'post'
             ));
+
+            // Store the email's Message-ID for future replies
+            if ($post_id && !empty($message_id)) {
+                add_post_meta($post_id, 'email_message_id', $message_id);
+            }
 
             if ($post_id) {
                 add_post_meta($post_id, 'email_from', $from);
@@ -146,4 +158,5 @@ function etp_fetch_emails()
     // CLOSE IMAP CONNECTION
     imap_close($email);
 }
+
 //end of 3/6/2025
