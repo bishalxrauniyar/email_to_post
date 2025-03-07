@@ -30,3 +30,34 @@ email_to_post plugin
     //         imap_setflag_full($email, $email_number, "\Seen"); //Mark the email as read
 // }
 // }
+
+foreach ($emails as $email_number) {
+    $headerInfo = imap_headerinfo($email, $email_number);
+    $from = $headerInfo->fromaddress ?? 'Unknown Sender';
+    $subject = $headerInfo->subject ?? 'No Subject';
+    $date = date("Y-m-d H:i:s", strtotime($headerInfo->date ?? 'now'));
+$in_reply_to = $headerInfo->in_reply_to ?? ''; // Get in-reply-to (original email's Message-ID)
+$message_id = $headerInfo->message_id ?? ''; // Current email's Message-ID
+
+    // Skip emails older than the last post
+    if ($date <= $last_post_date) {
+        continue;
+    }
+
+    // Fetch message body
+    $message = imap_fetchbody($email, $email_number, 1);
+
+    if (empty($message)) {
+        $message = imap_fetchbody($email, $email_number, 1.1);
+    }
+
+    // Remove quoted reply sections and quoted lines
+    $message = preg_replace('/(?:^On\s.*\sat\s.*wrote:.*|^>.*$)/m', '', $message);
+
+    // Remove any leading/trailing whitespace or newlines
+    $cleaned_message = trim($message);
+
+    // Show the cleaned message (email content only)
+    echo $cleaned_message . "\n";
+
+}
