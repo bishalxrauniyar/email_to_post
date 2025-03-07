@@ -31,6 +31,8 @@ email_to_post plugin
 // }
 // }
 
+logic for the message ( COMMENTS)
+
 foreach ($emails as $email_number) {
     $headerInfo = imap_headerinfo($email, $email_number);
     $from = $headerInfo->fromaddress ?? 'Unknown Sender';
