@@ -112,6 +112,9 @@ function etp_fetch_emails()
     if ($emails) {
         foreach ($emails as $email_number) {
             $headerInfo = imap_headerinfo($email, $email_number);
+            // var_dump($headerInfo->fromaddress);
+            $useremail = $headerInfo->from[0]->mailbox . '@' . $headerInfo->from[0]->host;
+            // var_dump($useremail);
             $from = $headerInfo->fromaddress ?? 'Unknown Sender';
             $subject = $headerInfo->subject ?? 'No Subject';
             $date = date("Y-m-d H:i:s", strtotime($headerInfo->date ?? 'now'));
@@ -161,13 +164,25 @@ function etp_fetch_emails()
                 }
             }
 
+            // check if the user exists if yes then create a post with the email as the author else create a new user and then create a post
+            $user = get_user_by('email', $useremail);
+            if ($user) {
+                $user_id = $user->ID;
+            } else {
+                $user_id = wp_insert_user(array(
+                    'user_login' => $useremail,
+                    'user_pass'  => wp_generate_password(),
+                    'user_email' => $useremail,
+                ));
+            }
+
             // Create new post if it's not a reply
             $post_id = wp_insert_post(array(
                 'post_title'   => $subject,
                 'post_content' => $message,
                 'post_date'    => $date,
                 'post_status'  => 'publish',
-                'post_author'  => 1,
+                'post_author'  => $user_id,
                 'post_type'    => 'post'
             ));
 
