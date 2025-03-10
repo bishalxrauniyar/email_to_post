@@ -54,7 +54,7 @@ function etp_fetch_emails_callback()
     }
     echo '</table>';
 }
-
+// function to clean the email message
 function clean_email_message($message)
 {
     // First, decode the message
@@ -78,7 +78,7 @@ function clean_email_message($message)
     // Return the cleaned-up message
     return $message;
 }
-
+// function to fetch emails ALL emails from the email server
 function etp_fetch_emails()
 {
     $hostname = '{wplocatepress.com:993/imap/ssl}INBOX'; // email server
@@ -109,6 +109,7 @@ function etp_fetch_emails()
 
     wp_reset_postdata();
 
+    // Loop through emails
     if ($emails) {
         foreach ($emails as $email_number) {
             $headerInfo = imap_headerinfo($email, $email_number);
