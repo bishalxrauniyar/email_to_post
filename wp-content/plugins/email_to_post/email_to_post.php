@@ -109,12 +109,6 @@ function etp_fetch_emails()
 
     wp_reset_postdata();
 
-    // Store processed message IDs in a transient or custom table
-    $processed_message_ids = get_transient('etp_processed_message_ids');
-    if (!$processed_message_ids) {
-        $processed_message_ids = [];
-    }
-
     if ($emails) {
         foreach ($emails as $email_number) {
             $headerInfo = imap_headerinfo($email, $email_number);
@@ -126,11 +120,6 @@ function etp_fetch_emails()
 
             // Skip emails older than the last post
             if ($date <= $last_post_date) {
-                continue;
-            }
-
-            // Check if the message ID has already been processed
-            if (in_array($message_id, $processed_message_ids)) {
                 continue;
             }
 
@@ -170,8 +159,8 @@ function etp_fetch_emails()
                             'user_pass'  => wp_generate_password(),
                         ));
                     }
-                    // Insert comment if not already present
-                    if (!empty($message) && !comment_exists_for_post($parent_post_id, $user_id, $message)) {
+                    // Insert comment
+                    if (!empty($message)) {
                         wp_insert_comment(array(
                             'comment_post_ID' => $parent_post_id,
                             'comment_author'  => $useremail,
@@ -182,8 +171,6 @@ function etp_fetch_emails()
                     }
 
                     continue; // Skip post creation since it's a reply
-                } else {
-                    error_log('No parent post found');
                 }
             }
 
@@ -222,26 +209,9 @@ function etp_fetch_emails()
             }
 
             add_post_meta($post_id, 'email_from', $from);
-
-            // Mark the email as processed
-            $processed_message_ids[] = $message_id;
         }
-
-        // Update the processed message IDs list
-        set_transient('etp_processed_message_ids', $processed_message_ids, 12 * HOUR_IN_SECONDS);
     }
 
     // CLOSE IMAP CONNECTION
     imap_close($email);
-}
-
-function comment_exists_for_post($post_id, $user_id, $message)
-{
-    $args = array(
-        'post_id' => $post_id,
-        'author'  => $user_id,
-        'content' => $message,
-    );
-    $comments = get_comments($args);
-    return !empty($comments);
 }
