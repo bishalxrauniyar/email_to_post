@@ -109,12 +109,15 @@ function etp_fetch_emails()
 
     wp_reset_postdata();
 
+    // Store processed message IDs in a transient or custom table
+    $processed_message_ids = get_transient('etp_processed_message_ids');
+    if (!$processed_message_ids) {
+        $processed_message_ids = [];
+    }
+
     if ($emails) {
         foreach ($emails as $email_number) {
             $headerInfo = imap_headerinfo($email, $email_number);
-            // var_dump($headerInfo->fromaddress);
-            $useremail = $headerInfo->from[0]->mailbox . '@' . $headerInfo->from[0]->host;
-            // var_dump($useremail);
             $from = $headerInfo->fromaddress ?? 'Unknown Sender';
             $subject = $headerInfo->subject ?? 'No Subject';
             $date = date("Y-m-d H:i:s", strtotime($headerInfo->date ?? 'now'));
@@ -123,6 +126,11 @@ function etp_fetch_emails()
 
             // Skip emails older than the last post
             if ($date <= $last_post_date) {
+                continue;
+            }
+
+            // Check if the message ID has already been processed
+            if (in_array($message_id, $processed_message_ids)) {
                 continue;
             }
 
@@ -137,7 +145,7 @@ function etp_fetch_emails()
             $message = clean_email_message($message);
 
             // If it's a reply, find the parent post and add a comment
-            if (!empty($in_reply_to)) {
+            if (!empty($in_reply_to) && class_exists('WP_Query')) {
                 $parent_query = new WP_Query(array(
                     'meta_key'   => 'email_message_id',
                     'meta_value' => $in_reply_to,
@@ -149,11 +157,24 @@ function etp_fetch_emails()
                 if (!empty($parent_query->posts)) {
                     $parent_post_id = $parent_query->posts[0];
 
-                    // Insert comment
-                    if (!empty($message)) {
+                    // Check if the user exists, and create a new user if not
+                    $useremail = $headerInfo->from[0]->mailbox . '@' . $headerInfo->from[0]->host;
+                    $user = get_user_by('email', $useremail);
+                    $useremail = explode('@', $useremail)[0];
+                    if ($user) {
+                        $user_id = $user->ID;
+                    } else {
+                        $user_id = wp_insert_user(array(
+                            'user_login' => $useremail,
+                            'user_email' => $useremail,
+                            'user_pass'  => wp_generate_password(),
+                        ));
+                    }
+                    // Insert comment if not already present
+                    if (!empty($message) && !comment_exists_for_post($parent_post_id, $user_id, $message)) {
                         wp_insert_comment(array(
                             'comment_post_ID' => $parent_post_id,
-                            'comment_author'  => $from,
+                            'comment_author'  => $useremail,
                             'comment_content' => $message,
                             'comment_date'    => $date,
                             'comment_approved' => 1,
@@ -161,18 +182,22 @@ function etp_fetch_emails()
                     }
 
                     continue; // Skip post creation since it's a reply
+                } else {
+                    error_log('No parent post found');
                 }
             }
 
-            // check if the user exists if yes then create a post with the email as the author else create a new user and then create a post
+            // Check if the user exists, and create a new user if not
+            $useremail = $headerInfo->from[0]->mailbox . '@' . $headerInfo->from[0]->host;
             $user = get_user_by('email', $useremail);
+            $useremail = explode('@', $useremail)[0];
             if ($user) {
                 $user_id = $user->ID;
             } else {
                 $user_id = wp_insert_user(array(
                     'user_login' => $useremail,
-                    'user_pass'  => wp_generate_password(),
                     'user_email' => $useremail,
+                    'user_pass'  => wp_generate_password(),
                 ));
             }
 
@@ -186,17 +211,37 @@ function etp_fetch_emails()
                 'post_type'    => 'post'
             ));
 
+            if (is_wp_error($post_id)) {
+                error_log('Failed to create post: ' . $post_id->get_error_message());
+                continue;
+            }
+
             // Store the email's Message-ID for future replies
-            if ($post_id && !empty($message_id)) {
+            if (!empty($message_id)) {
                 add_post_meta($post_id, 'email_message_id', $message_id);
             }
 
-            if ($post_id) {
-                add_post_meta($post_id, 'email_from', $from);
-            }
+            add_post_meta($post_id, 'email_from', $from);
+
+            // Mark the email as processed
+            $processed_message_ids[] = $message_id;
         }
+
+        // Update the processed message IDs list
+        set_transient('etp_processed_message_ids', $processed_message_ids, 12 * HOUR_IN_SECONDS);
     }
 
     // CLOSE IMAP CONNECTION
     imap_close($email);
+}
+
+function comment_exists_for_post($post_id, $user_id, $message)
+{
+    $args = array(
+        'post_id' => $post_id,
+        'author'  => $user_id,
+        'content' => $message,
+    );
+    $comments = get_comments($args);
+    return !empty($comments);
 }
