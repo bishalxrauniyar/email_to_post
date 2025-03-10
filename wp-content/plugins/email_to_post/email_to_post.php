@@ -55,6 +55,29 @@ function etp_fetch_emails_callback()
     echo '</table>';
 }
 
+function clean_email_message($message)
+{
+    // First, decode the message
+    $message = quoted_printable_decode($message);
+
+    // Trim the message to remove unnecessary spaces
+    $message = trim($message);
+
+    // Step 1: Look for the "On <date> wrote:" and remove quoted content
+    $message = preg_replace('/On\s.*\bwrote:[\s\S]+?(?=\n\s*--|$)/s', '', $message);
+
+    // Step 2: Clean up any trailing quoted content (indicated by `>`)
+    $message = preg_replace('/(^|\n)>.*$/s', '', $message);
+
+    // Step 3: Ensure any signature starting with `--` is preserved
+    if (preg_match('/(\R\s*--\s*\R*)/', $message, $matches)) {
+        // Remove everything before the signature and preserve the signature
+        $message = preg_replace('/[\s\S]+?(\R\s*--\s*\R*)/s', '$1', $message);
+    }
+
+    // Return the cleaned-up message
+    return $message;
+}
 
 function etp_fetch_emails()
 {
@@ -103,15 +126,12 @@ function etp_fetch_emails()
             // Fetch message body
             $message = imap_fetchbody($email, $email_number, 1);
 
-            // $testM = imap_fetchtext($email, $email_number);
-            // var_dump($testM);
-
-
             if (empty($message)) {
                 $message = imap_fetchbody($email, $email_number, 1.1);
             }
 
-
+            // Clean the email message
+            $message = clean_email_message($message);
 
             // If it's a reply, find the parent post and add a comment
             if (!empty($in_reply_to)) {
@@ -125,8 +145,6 @@ function etp_fetch_emails()
 
                 if (!empty($parent_query->posts)) {
                     $parent_post_id = $parent_query->posts[0];
-
-                    // Clean up email message by removing quoted text
 
                     // Insert comment
                     if (!empty($message)) {
@@ -167,5 +185,3 @@ function etp_fetch_emails()
     // CLOSE IMAP CONNECTION
     imap_close($email);
 }
-
-//end of 3/6/2025
