@@ -137,10 +137,14 @@ function etp_fetch_emails()
 
                 ]);
 
-                // loop to check if the comment already exists in the post
-                if (!empty($existing_comments)) {
-                    continue;
+                // loop to check if the comment already exists in the post 
+                foreach ($existing_comments as $comment) {
+                    if ($comment->comment_content == $message) {
+                        continue;
+                    }
+                    // if the comment does not exist, add it to the post
                 }
+
 
                 // Add the reply as a comment
                 wp_insert_comment([
@@ -154,7 +158,7 @@ function etp_fetch_emails()
                 ]);
 
 
-                ////
+
 
                 continue; // Skip creating a new post
             }
