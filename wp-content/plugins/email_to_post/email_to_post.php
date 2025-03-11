@@ -127,41 +127,41 @@ function etp_fetch_emails()
                 }
             }
 
-            // If this is a reply, add it as a comment
             if ($original_post_id) {
                 // Prevent duplicate comments
                 $existing_comments = get_comments([
                     'post_id' => $original_post_id,
                     'meta_key' => 'email_message_id',
                     'meta_value' => $message_id,
-
                 ]);
 
-                // loop to check if the comment already exists in the post 
+                $is_duplicate = false;
                 foreach ($existing_comments as $comment) {
-                    if ($comment->comment_content == $message) {
-                        continue;
+                    if (trim($comment->comment_content) == trim($message)) {
+                        $is_duplicate = true;
+                        break;
                     }
-                    // if the comment does not exist, add it to the post
                 }
 
+                if (!$is_duplicate) {
+                    // Insert comment
+                    $comment_id = wp_insert_comment([
+                        'comment_post_ID' => $original_post_id,
+                        'comment_author' => $from,
+                        'comment_content' => $message,
+                        'comment_date' => $date,
+                        'comment_approved' => 1,
+                    ]);
 
-                // Add the reply as a comment
-                wp_insert_comment([
-
-                    'comment_post_ID' => $original_post_id,
-                    'comment_author' => $from,
-                    'comment_content' => $message,
-                    'comment_date' => $date,
-                    'comment_approved' => 1,
-                    'comment_meta' => ['email_message_id' => $message_id]
-                ]);
-
-
-
+                    // Add meta separately
+                    if (!is_wp_error($comment_id) && $comment_id) {
+                        add_comment_meta($comment_id, 'email_message_id', $message_id, true);
+                    }
+                }
 
                 continue; // Skip creating a new post
             }
+
 
             // If no post exists, create a new one (for first-time emails)
             $useremail = $headerInfo->from[0]->mailbox . '@' . $headerInfo->from[0]->host;
@@ -193,5 +193,8 @@ function etp_fetch_emails()
         }
     }
 
+
     imap_close($email);
 }
+
+// adding a feature that allows the user to reply to the email from the post original mail from email pipetest@wplocatepress.com through comment section of the post
