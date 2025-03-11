@@ -134,11 +134,13 @@ function etp_fetch_emails()
                     'post_id' => $original_post_id,
                     'meta_key' => 'email_message_id',
                     'meta_value' => $message_id,
+
                 ]);
 
-
-                if (!empty($existing_comments)) continue;
-                // die(var_dump($existing_comments));
+                // loop to check if the comment already exists in the post
+                if (!empty($existing_comments)) {
+                    continue;
+                }
 
                 // Add the reply as a comment
                 wp_insert_comment([
@@ -152,6 +154,7 @@ function etp_fetch_emails()
                 ]);
 
 
+                ////
 
                 continue; // Skip creating a new post
             }
