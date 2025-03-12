@@ -207,7 +207,11 @@ function etp_reply_email($comment_id, $comment_approved, $commentdata)
         $post = get_post($comment->comment_post_ID);
         $email_from = get_post_meta($post->ID, 'email_from', true);
         $email_message_id = get_post_meta($post->ID, 'email_message_id', true);
-
+        var_dump($email_from);
+        var_dump($email_message_id);
+        var_dump($post->post_title);
+        var_dump($commentdata['comment_content']);
+        die('siuisadasds');
 
 
 
