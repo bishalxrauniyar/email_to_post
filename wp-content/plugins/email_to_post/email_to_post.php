@@ -211,6 +211,7 @@ function etp_reply_email($comment_id, $comment_approved, $commentdata)
         var_dump($email_message_id);
         var_dump($post->post_title);
         var_dump($commentdata['comment_content']);
+
         die('siuisadasds');
 
 
@@ -227,6 +228,8 @@ function etp_reply_email($comment_id, $comment_approved, $commentdata)
             }
 
             $email_message_id = trim($email_message_id);
+            // var_dump($email_message_id);
+            // die('siuisadasds');
             $search_result = imap_search($email, 'HEADER Message-ID "' . $email_message_id . '"');
 
             if ($search_result && is_array($search_result)) {
