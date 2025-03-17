@@ -203,10 +203,10 @@ function etp_fetch_emails()
 function etp_reply_email($comment_id, $comment_approved)
 {
     if ($comment_approved) {
-        $comment = get_comment($comment_id);
-        $post = get_post($comment->comment_post_ID);
-        $email_from = get_post_meta($post->ID, 'email_from', true);
-        $email_message_id = get_post_meta($post->ID, 'email_message_id', true);
+        $comment = get_comment($comment_id); // Get the comment object
+        $post = get_post($comment->comment_post_ID); // Get the post object
+        $email_from = get_post_meta($post->ID, 'email_from', true); //  Get the email from the post meta
+        $email_message_id = get_post_meta($post->ID, 'email_message_id', true); // Get the email message id from the post meta
 
         preg_match('/<(.*?)>/', $email_from, $matches); // Extract email from angle brackets
         $pure_email = $matches[1] ?? $email_from;       // Get email without angle brackets
@@ -229,7 +229,7 @@ function etp_reply_email($comment_id, $comment_approved)
             'Content-Type: text/plain; charset=UTF-8'
         ];
 
-        $mail_sent = wp_mail($reply_to, $subject, $reply_message, $headers);
+        $mail_sent = wp_mail($reply_to, $subject, $reply_message, $headers); // Send email
 
         if (!$mail_sent) {
             error_log('Email failed to send to ' . $reply_to);
