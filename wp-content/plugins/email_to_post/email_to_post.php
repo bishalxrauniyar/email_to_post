@@ -198,83 +198,44 @@ function etp_fetch_emails()
 }
 
 // adding a feature that allows the user to reply to the email from the post original mail from email pipetest@wplocatepress.com through comment section of the post
-// imap cannot be used to send emails, so we will use wp_mail() function to send emails.
-function etp_reply_email($comment_id, $comment_approved, $commentdata)
+// imap cannot be used to send emails, so we will use wp_mail() function to send emails. email from must be pipetest@wplocatepress.com and the email to must be the post author email
+// Post comments as email replies
+function etp_reply_email($comment_id, $comment_approved)
 {
-
     if ($comment_approved) {
         $comment = get_comment($comment_id);
         $post = get_post($comment->comment_post_ID);
         $email_from = get_post_meta($post->ID, 'email_from', true);
         $email_message_id = get_post_meta($post->ID, 'email_message_id', true);
-        // var_dump($email_from);
-        // var_dump($email_message_id);
-        // var_dump($post->post_title);
-        // var_dump($commentdata['comment_content']);
-        // die('siuisadasds');
 
+        preg_match('/<(.*?)>/', $email_from, $matches);
+        $pure_email = $matches[1] ?? $email_from;
 
+        if (!filter_var($pure_email, FILTER_VALIDATE_EMAIL)) {
+            error_log('Invalid sender email: ' . $pure_email);
+            return;
+        }
 
-        if ($email_from && $email_message_id) {
-            $hostname = '{wplocatepress.com:993/imap/ssl}INBOX';
-            $username = 'pipetest@wplocatepress.com';
-            $password = 'k342+11$c1_';
+        $reply_to = $pure_email;
+        $subject = 'Re: ' . $post->post_title;
+        $comment_content = $comment->comment_content;
+        $reply_message = "On " . date("Y-m-d H:i:s", strtotime($post->post_date)) . ", $email_from wrote:\n\n" . $comment_content;
 
-            $email = imap_open($hostname, $username, $password);
-            if (!$email) {
-                error_log('IMAP Connection Failed: ' . imap_last_error());
-                return;
-            }
+        $headers = [
+            'From: Email To Post <pipetest@wplocatepress.com>',
+            'Reply-To: ' . $reply_to,
+            'In-Reply-To: ' . $email_message_id,
+            'MIME-Version: 1.0',
+            'Content-Type: text/plain; charset=UTF-8'
+        ];
 
-            $email_message_id = trim($email_message_id);
-            // var_dump($email_message_id);
-            // die('siuisadasds');
-            $search_result = imap_search($email, 'HEADER Message-ID "' . $email_message_id . '"');
+        $mail_sent = wp_mail($reply_to, $subject, $reply_message, $headers);
 
-            if ($search_result && is_array($search_result)) {
-                $message_num = $search_result[0];
-                $headerInfo = imap_headerinfo($email, $message_num);
-                imap_close($email);
-
-                // Get reply address
-                // Get reply address - improve how you extract the email
-                $reply_to = '';
-                if (!empty($headerInfo->reply_to)) {
-                    $reply_to = $headerInfo->reply_to[0]->mailbox . '@' . $headerInfo->reply_to[0]->host;
-                } elseif (!empty($headerInfo->from)) {
-                    $reply_to = $headerInfo->from[0]->mailbox . '@' . $headerInfo->from[0]->host;
-                } else {
-                    $reply_to = $email_from; // Fallback to stored meta
-                }
-                $subject = 'Re: ' . ($headerInfo->subject ?? $post->post_title);
-                $message_id = $headerInfo->message_id ?? '';
-                $references = $headerInfo->references ?? '';
-
-
-
-                // Construct Reply Email
-                $comment_content = $commentdata['comment_content'];
-                $reply_message = "On " . date("Y-m-d H:i:s") . ", $email_from wrote:\n\n" . $comment_content;
-
-                // Email Headers
-                $headers = [
-                    'From: pipetest@wplocatepress.com',
-                    'Reply-To: ' . $reply_to,
-                    'In-Reply-To: ' . $message_id,
-                    'References: ' . trim($references . ' ' . $message_id),
-                    'Content-Type: text/plain; charset=UTF-8'
-                ];
-
-                // Send Email using wp_mail()
-
-                $mail_sent = wp_mail($reply_to, $subject, $reply_message, $headers);
-                if (!$mail_sent) {
-                    error_log('Email failed to send to ' . $reply_to . ': ' . $subject);
-                }
-            } else {
-                error_log('Email with Message-ID ' . $email_message_id . ' not found.');
-            }
+        if (!$mail_sent) {
+            error_log('Email failed to send to ' . $reply_to);
+        } else {
+            error_log('Email successfully sent to ' . $reply_to);
         }
     }
 }
-add_action('comment_post', 'etp_reply_email', 10, 3); // Hook into comment_post action 10 priority, 2 arguments
+add_action('comment_post', 'etp_reply_email', 10, 2);
