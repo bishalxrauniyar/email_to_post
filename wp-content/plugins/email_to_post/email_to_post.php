@@ -207,12 +207,11 @@ function etp_reply_email($comment_id, $comment_approved, $commentdata)
         $post = get_post($comment->comment_post_ID);
         $email_from = get_post_meta($post->ID, 'email_from', true);
         $email_message_id = get_post_meta($post->ID, 'email_message_id', true);
-        var_dump($email_from);
-        var_dump($email_message_id);
-        var_dump($post->post_title);
-        var_dump($commentdata['comment_content']);
-
-        die('siuisadasds');
+        // var_dump($email_from);
+        // var_dump($email_message_id);
+        // var_dump($post->post_title);
+        // var_dump($commentdata['comment_content']);
+        // die('siuisadasds');
 
 
 
@@ -238,10 +237,15 @@ function etp_reply_email($comment_id, $comment_approved, $commentdata)
                 imap_close($email);
 
                 // Get reply address
-                $reply_to = !empty($headerInfo->reply_to)
-                    ? $headerInfo->reply_to[0]->mailbox . '@' . $headerInfo->reply_to[0]->host
-                    : $email_from;
-
+                // Get reply address - improve how you extract the email
+                $reply_to = '';
+                if (!empty($headerInfo->reply_to)) {
+                    $reply_to = $headerInfo->reply_to[0]->mailbox . '@' . $headerInfo->reply_to[0]->host;
+                } elseif (!empty($headerInfo->from)) {
+                    $reply_to = $headerInfo->from[0]->mailbox . '@' . $headerInfo->from[0]->host;
+                } else {
+                    $reply_to = $email_from; // Fallback to stored meta
+                }
                 $subject = 'Re: ' . ($headerInfo->subject ?? $post->post_title);
                 $message_id = $headerInfo->message_id ?? '';
                 $references = $headerInfo->references ?? '';
@@ -262,13 +266,11 @@ function etp_reply_email($comment_id, $comment_approved, $commentdata)
                 ];
 
                 // Send Email using wp_mail()
-                if (!wp_mail($reply_to, $subject, $reply_message, $headers)) {
-                    error_log('Email failed to send to ' . $reply_to);
+
+                $mail_sent = wp_mail($reply_to, $subject, $reply_message, $headers);
+                if (!$mail_sent) {
+                    error_log('Email failed to send to ' . $reply_to . ': ' . $subject);
                 }
-
-
-                var_dump($reply_to);
-                die('siuisadasds');
             } else {
                 error_log('Email with Message-ID ' . $email_message_id . ' not found.');
             }
