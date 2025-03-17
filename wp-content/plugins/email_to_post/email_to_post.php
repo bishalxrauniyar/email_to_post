@@ -238,4 +238,4 @@ function etp_reply_email($comment_id, $comment_approved)
         }
     }
 }
-add_action('comment_post', 'etp_reply_email', 10, 2);
+add_action('comment_post', 'etp_reply_email', 10, 2); // Hook into comment_post action which is triggered when a comment is posted
