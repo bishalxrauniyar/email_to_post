@@ -208,8 +208,8 @@ function etp_reply_email($comment_id, $comment_approved)
         $email_from = get_post_meta($post->ID, 'email_from', true);
         $email_message_id = get_post_meta($post->ID, 'email_message_id', true);
 
-        preg_match('/<(.*?)>/', $email_from, $matches);
-        $pure_email = $matches[1] ?? $email_from;
+        preg_match('/<(.*?)>/', $email_from, $matches); // Extract email from angle brackets
+        $pure_email = $matches[1] ?? $email_from;       // Get email without angle brackets
 
         if (!filter_var($pure_email, FILTER_VALIDATE_EMAIL)) {
             error_log('Invalid sender email: ' . $pure_email);
