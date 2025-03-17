@@ -1,7 +1,7 @@
-Email to Post Plugin
+##Email to Post Plugin
 The Email to Post Plugin is a WordPress plugin that enables users to create new posts on their WordPress site by simply sending an email. This functionality allows for convenient content creation, especially when access to the WordPress admin dashboard is limited.
 
-Features
+#Features
 Post via Email: Create new posts by sending an email to a specified address.
 Customizable Settings: Configure email parameters such as subject prefixes to categorize posts.
 Attachment Handling: Automatically include attachments from emails into the post content.
@@ -24,7 +24,7 @@ In the WordPress admin dashboard, navigate to Settings > Email to Post.
 Set Email Parameters:
 
 Mail Server: Enter the mail server address (e.g., mail.example.com).
-Port: Specify the port number (commonly 110 for POP3 or 993 for IMAP).
+Port: Specify the port number ( 993 for IMAP).
 Username: Provide the email account username.
 Password: Enter the email account password.
 Define Post Settings:
