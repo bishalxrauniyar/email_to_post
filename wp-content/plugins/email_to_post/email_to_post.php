@@ -236,9 +236,9 @@ function etp_reply_email($comment_id, $comment_approved)
         $mail_sent = wp_mail($reply_to, $subject, $reply_message, $headers); // Send email
 
         if (!$mail_sent) {
-            error_log('Email failed to send to ' . $reply_to);
+            error_log('Email failed to send to ' . $reply_to); // Log error if email fails to send
         } else {
-            error_log('Email successfully sent to ' . $reply_to);
+            error_log('Email successfully sent to ' . $reply_to); // Log success if email is sent
         }
     }
 }
