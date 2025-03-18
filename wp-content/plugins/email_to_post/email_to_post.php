@@ -44,7 +44,7 @@ function etp_fetch_emails_callback()
     echo '<table class="wp-list-table widefat fixed striped">';
     echo '<tr><th>From</th><th>Subject</th><th>Date</th><th>Message</th></tr>';
 
-    $posts = get_posts(['post_type' => 'post', 'meta_key' => 'email_message_id', 'numberposts' => -1]);
+    $posts = get_posts(['post_type' => 'post', 'meta_key' => 'email_message_id', 'numberposts' => -1]); // Get all posts with email_message_id meta
     foreach ($posts as $post) {
         echo '<tr>';
         echo '<td>' . esc_html(get_post_meta($post->ID, 'email_from', true)) . '</td>';
@@ -69,12 +69,13 @@ function clean_email_message($message)
 // Function to fetch emails
 function etp_fetch_emails()
 {
+    // Email configuration
     $hostname = '{wplocatepress.com:993/imap/ssl}INBOX';
     $username = 'pipetest@wplocatepress.com';
     $password = 'k342+11$c1_';
-
+    // Connect to email
     $email = imap_open($hostname, $username, $password) or die('Cannot connect to email: ' . imap_last_error());
-    $emails = imap_search($email, 'ALL');
+    $emails = imap_search($email, 'ALL'); // Search for all emails
 
     if ($emails) {
         foreach ($emails as $email_number) {
