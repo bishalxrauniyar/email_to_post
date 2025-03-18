@@ -226,6 +226,7 @@ function etp_reply_email($comment_id, $comment_approved)
         $headers = [
             'From: Email To Post <pipetest@wplocatepress.com>',
             'Reply-To: ' . $reply_to,
+            'References: ' . $email_message_id,
             'In-Reply-To: ' . $email_message_id,
             'MIME-Version: 1.0',
             'Content-Type: text/plain; charset=UTF-8'
