@@ -195,8 +195,6 @@ function etp_fetch_emails()
             }
         }
     }
-
-
     imap_close($email);
 }
 
