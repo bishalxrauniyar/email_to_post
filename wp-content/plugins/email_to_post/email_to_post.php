@@ -32,28 +32,30 @@ add_action('admin_menu', 'etp_menu');
 function etp_fetch_emails_callback()
 {
     echo '<h1>Email To Post</h1>';
-    echo '<form method="post" action="">
-    <input type="submit" name="fetch_emails" value="Fetch Emails" class="button button-primary">
-    </form>';
+    echo '<form method="post" action="">';
+    wp_nonce_field('etp_fetch_emails_action', 'etp_fetch_emails_nonce');
+    echo '<input type="submit" name="fetch_emails" value="Fetch Emails" class="button button-primary">';
+    echo '</form>';
 
-    if (isset($_POST['fetch_emails'])) {
+    if (isset($_POST['fetch_emails']) && check_admin_referer('etp_fetch_emails_action', 'etp_fetch_emails_nonce')) {
         etp_fetch_emails();
     }
 
     echo '<table class="wp-list-table widefat fixed striped">';
     echo '<tr><th>From</th><th>Subject</th><th>Date</th><th>Message</th></tr>';
 
-    $posts = get_posts(array('post_type' => 'post', 'numberposts' => -1));
+    $posts = get_posts(['post_type' => 'post', 'meta_key' => 'email_message_id', 'numberposts' => -1]);
     foreach ($posts as $post) {
         echo '<tr>';
         echo '<td>' . esc_html(get_post_meta($post->ID, 'email_from', true)) . '</td>';
         echo '<td>' . esc_html($post->post_title) . '</td>';
         echo '<td>' . esc_html($post->post_date) . '</td>';
-        echo '<td>' . esc_html($post->post_content) . '</td>';
+        echo '<td>' . esc_html(wp_trim_words($post->post_content)) . '</td>';
         echo '</tr>';
     }
     echo '</table>';
 }
+
 
 // Function to clean the email message 
 function clean_email_message($message)
