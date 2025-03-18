@@ -33,10 +33,10 @@ function etp_fetch_emails_callback()
 {
     echo '<h1>Email To Post</h1>';
     echo '<form method="post" action="">';
-    wp_nonce_field('etp_fetch_emails_action', 'etp_fetch_emails_nonce');
+    wp_nonce_field('etp_fetch_emails_action', 'etp_fetch_emails_nonce'); // Add nonce field for security
     echo '<input type="submit" name="fetch_emails" value="Fetch Emails" class="button button-primary">';
     echo '</form>';
-
+    // Check if the fetch emails button is clicked and nonce is valid
     if (isset($_POST['fetch_emails']) && check_admin_referer('etp_fetch_emails_action', 'etp_fetch_emails_nonce')) {
         etp_fetch_emails();
     }
