@@ -44,13 +44,19 @@ function etp_fetch_emails_callback()
     echo '<table class="wp-list-table widefat fixed striped">';
     echo '<tr><th>From</th><th>Subject</th><th>Date</th><th>Message</th></tr>';
 
-    $posts = get_posts(['post_type' => 'post', 'meta_key' => 'email_message_id', 'numberposts' => -1]); // Get all posts with email_message_id meta
+    $posts = get_posts(
+        [
+            'post_type' => 'post',
+            'meta_key' => 'email_message_id',
+            'numberposts' => -1 // Get all posts with email_message_id meta
+        ]
+    );
     foreach ($posts as $post) {
         echo '<tr>';
         echo '<td>' . esc_html(get_post_meta($post->ID, 'email_from', true)) . '</td>';
         echo '<td>' . esc_html($post->post_title) . '</td>';
         echo '<td>' . esc_html($post->post_date) . '</td>';
-        echo '<td>' . esc_html(wp_trim_words($post->post_content)) . '</td>';
+        echo '<td>' . esc_html($post->post_content) . '</td>';
         echo '</tr>';
     }
     echo '</table>';
