@@ -1,13 +1,13 @@
 <?php
 /*
  * Plugin Name:       Email To Post
- * Plugin URI:        https://example.com/plugins/the-basics/
+ * Plugin URI:        https://github.com/bishalxrauniyar/
  * Description:       Fetches emails and creates posts from them.
  * Version:           1.1
  * Requires at least: 5.2
  * Requires PHP:      7.2
- * Author:            Bishaal Rauniyar
- * Author URI:        https://github.com/bishalxrauniyar/email-to-post
+ * Author:            Bishal Rauniyar
+ * Author URI:        https://github.com/bishalxrauniyar/
  */
 
 // If this file is called directly, abort.
@@ -27,7 +27,8 @@ function etp_menu()
 }
 add_action('admin_menu', 'etp_menu');
 
-// Callback function to fetch emails
+// Callback function to fetch emails triggers when fetch emails button is clicked
+// Fetches emails and displays them in a table
 function etp_fetch_emails_callback()
 {
     echo '<h1>Email To Post</h1>';
@@ -54,7 +55,7 @@ function etp_fetch_emails_callback()
     echo '</table>';
 }
 
-// Function to clean the email message
+// Function to clean the email message 
 function clean_email_message($message)
 {
     $message = quoted_printable_decode($message);
@@ -211,6 +212,7 @@ function etp_reply_email($comment_id, $comment_approved)
         preg_match('/<(.*?)>/', $email_from, $matches); // Extract email from angle brackets
         $pure_email = $matches[1] ?? $email_from;       // Get email without angle brackets
 
+        //validate email
         if (!filter_var($pure_email, FILTER_VALIDATE_EMAIL)) {
             error_log('Invalid sender email: ' . $pure_email);
             return;
