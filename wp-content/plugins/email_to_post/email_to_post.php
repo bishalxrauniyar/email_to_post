@@ -8,6 +8,9 @@
  * Requires PHP:      7.2
  * Author:            Bishal Rauniyar
  * Author URI:        https://github.com/bishalxrauniyar/
+ * License:           GPL v2 or later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:       email-to-post
  */
 
 // If this file is called directly, abort.
