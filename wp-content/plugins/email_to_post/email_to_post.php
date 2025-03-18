@@ -44,7 +44,7 @@ function etp_fetch_emails_callback()
         etp_fetch_emails();
     }
 
-    echo '<table class="wp-list-table widefat fixed striped">';
+    echo '<table class="wp-list-table widefat fixed striped ">';
     echo '<tr><th>From</th><th>Subject</th><th>Date</th><th>Message</th></tr>';
 
     $posts = get_posts(
