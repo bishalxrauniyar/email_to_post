@@ -13,7 +13,7 @@
  * Text Domain:       email-to-post
  */
 
-// If this file is called directly, abort.
+
 if (!defined('ABSPATH')) exit; // Exit if accessed directly
 
 // Add a menu item in the admin dashboard
