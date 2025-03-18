@@ -35,6 +35,7 @@ add_action('admin_menu', 'etp_menu');
 function etp_fetch_emails_callback()
 {
     echo '<h1>Email To Post</h1>';
+    echo '<p>Click the button below to fetch emails</p>';
     echo '<form method="post" action="">';
     wp_nonce_field('etp_fetch_emails_action', 'etp_fetch_emails_nonce'); // Add nonce field for security
     echo '<input type="submit" name="fetch_emails" value="Fetch Emails" class="button button-primary">';
