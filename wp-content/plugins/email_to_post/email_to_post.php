@@ -2,7 +2,7 @@
 /*
  * Plugin Name:       Email To Post
  * Plugin URI:        https://github.com/bishalxrauniyar/
- * Description:       Fetches emails and creates posts from them.
+ * Description:       Fetches emails and creates posts from them, reply to the mail from the post comment section will send the email to the post author.
  * Version:           1.1
  * Requires at least: 5.2
  * Requires PHP:      7.2
