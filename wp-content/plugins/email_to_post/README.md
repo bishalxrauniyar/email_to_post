@@ -268,29 +268,3 @@ function etp_fetch_emails()
     // CLOSE IMAP CONNECTION
     imap_close($email);
 }
-
-
-
-# daily log
-
-Fixes:
-
-Signature / with out signature email are displayed properly
-username is extracted from the user email 
-unwanted tail email and content is not displayed as required 
-
-Issues:
-
-Both emails sender and receiver are not been ale to make comments .
-re-reply from the sender not parent ( post created user) are been created as post 
-multiple fetch results into multiple comment ( same  Comment)
-
-Working on:
-
-To Remove The Duplicate Comments From The Posts.
-
-Fix the issues .
-
-@utsav Sir @djbaba Sir
-
-# 3/10/2025
